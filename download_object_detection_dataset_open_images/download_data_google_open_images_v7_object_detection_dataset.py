@@ -154,10 +154,10 @@ def process(classes, data_out_dir, yolov8_format, max_number_images_per_class):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--classes', default=['Duck', 'Dog'])
+    parser.add_argument('--classes', default=['Car'])
     parser.add_argument('--out-dir', default='./data')
     parser.add_argument('--yolov8-format', default=True)
-    parser.add_argument('--max-number-images-per-class', default=100)
+    parser.add_argument('--max-number-images-per-class', default=10)
     args = parser.parse_args()
 
     classes = args.classes
