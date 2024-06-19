@@ -1,7 +1,7 @@
 # Inside config.yaml
-path: C:\Users\hello\OneDrive\Documents\Python\Yolov8_object_detection\data  # Represents the current directory (where config.yaml is located)
-train: images/train  # Training images are in the "images/train" subfolder
-val: images/val  # Validation images are in the "images/val" subfolder
+path: ./       # Current directory (the data folder)
+train: images/train  # Relative path to training images
+val: images/val     # Relative path to validation images
 test: # (Optional) If you have test images, specify their path similarly
 
 # Classes
