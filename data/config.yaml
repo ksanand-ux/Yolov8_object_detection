@@ -1,5 +1,5 @@
 # Inside config.yaml
-path: ./  # Represents the current directory (where config.yaml is located)
+path: ~/OneDrive/Documents/Python/Yolov8_object_detection/data  # Represents the current directory (where config.yaml is located)
 train: images/train  # Training images are in the "images/train" subfolder
 val: images/val  # Validation images are in the "images/val" subfolder
 test: # (Optional) If you have test images, specify their path similarly
