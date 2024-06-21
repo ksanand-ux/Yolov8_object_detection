@@ -1,0 +1,57 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          pip install ultralytics torch torchvision torchaudio flask
+
+      - name: Run training and export notebook
+        run: |
+          jupyter nbconvert --to notebook --execute --inplace path/to/your/Object_Detection_Yolov8.ipynb
+
+      - name: Upload model artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: model
+          path: /content/models
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AKIARI3LSUCSCZ5AIFQY }}
+          aws-secret-access-key: ${{ secrets.uKc0vhz+gwCT/g3TLYGh7HoZS0y2gXtxmaxbAiwx }}
+          aws-region: us-west-2
+
+      - name: Build Docker image
+        run: |
+          docker build -t your-docker-repo/your-image-name:latest .
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin your-account-id.dkr.ecr.us-west-2.amazonaws.com
+
+      - name: Push Docker image to ECR
+        run: |
+          docker tag your-docker-repo/your-image-name:latest your-account-id.dkr.ecr.us-west-2.amazonaws.com/your-ecr-repo:latest
+          docker push your-account-id.dkr.ecr.us-west-2.amazonaws.com/your-ecr-repo:latest
+
+      - name: Deploy to EC2
+        run: |
+          aws ecs update-service --cluster your-cluster-name --service your-service-name --force-new-deployment
