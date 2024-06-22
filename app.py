@@ -5,6 +5,10 @@ from ultralytics import YOLO
 app = Flask(__name__)
 model = YOLO('yolov8n.pt')  # Load the model
 
+@app.route('/')
+def index():
+    return "Welcome to the YOLOv8 Object Detection API!"
+
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
