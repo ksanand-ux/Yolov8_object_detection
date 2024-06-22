@@ -1,7 +1,8 @@
 import io
 
+import cv2
 import numpy as np
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from PIL import Image
 from ultralytics import YOLO
 
@@ -21,24 +22,24 @@ def predict():
         
         # Load the image
         img = Image.open(file.stream)
-        
-        # Convert the image to a format supported by YOLO model
-        img = np.array(img)
+        img_np = np.array(img)
         
         # Perform prediction
-        results = model(img)
+        results = model(img_np)
         
-        # Extract the relevant data from the results
-        predictions = []
+        # Draw bounding boxes on the image
         for result in results:
-            prediction = {
-                'boxes': result.boxes.xyxy.tolist(),  # Bounding box coordinates
-                'scores': result.boxes.conf.tolist(), # Confidence scores
-                'class_ids': result.boxes.cls.tolist() # Class IDs
-            }
-            predictions.append(prediction)
+            for box in result.boxes.xyxy:
+                x1, y1, x2, y2 = map(int, box)
+                cv2.rectangle(img_np, (x1, y1), (x2, y2), (0, 255, 0), 2)
         
-        return jsonify(predictions)
+        # Convert image back to PIL format
+        img_out = Image.fromarray(img_np)
+        img_io = io.BytesIO()
+        img_out.save(img_io, 'JPEG')
+        img_io.seek(0)
+        
+        return send_file(img_io, mimetype='image/jpeg')
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 500
