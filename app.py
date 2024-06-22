@@ -36,7 +36,7 @@ def predict():
         # Convert image back to PIL format
         img_out = Image.fromarray(img_np)
         img_io = io.BytesIO()
-        img_out.save(img_io, 'JPEG')
+        img_out.save(img_io, format='JPEG')
         img_io.seek(0)
         
         return send_file(img_io, mimetype='image/jpeg')
