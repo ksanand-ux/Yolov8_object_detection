@@ -28,8 +28,15 @@ def predict():
         # Perform prediction
         results = model(img)
         
-        # Convert results to JSON serializable format
-        predictions = [result.numpy() for result in results]
+        # Extract the relevant data from the results
+        predictions = []
+        for result in results:
+            prediction = {
+                'boxes': result.boxes.xyxy.tolist(),  # Bounding box coordinates
+                'scores': result.boxes.conf.tolist(), # Confidence scores
+                'class_ids': result.boxes.cls.tolist() # Class IDs
+            }
+            predictions.append(prediction)
         
         return jsonify(predictions)
     except Exception as e:
@@ -38,5 +45,3 @@ def predict():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
-
-
