@@ -29,7 +29,7 @@ def predict():
         results = model(img)
         
         # Convert results to JSON serializable format
-        predictions = results.pandas().xyxy[0].to_dict(orient='records')
+        predictions = [result.numpy() for result in results]
         
         return jsonify(predictions)
     except Exception as e:
@@ -38,4 +38,5 @@ def predict():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
+
 
