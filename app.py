@@ -8,14 +8,14 @@ import cv2
 
 # Configure logging
 logging.basicConfig(
-    filename='app.log',               # The file where logs will be saved
-    level=logging.DEBUG,               # Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    format='%(asctime)s %(levelname)s: %(message)s',  # Log format
-    datefmt='%Y-%m-%d %H:%M:%S'        # Date format
+    filename='app.log',
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
 )
 
 app = Flask(__name__)
-model = YOLO('yolov8n.pt')  # Load the saved model
+model = YOLO('yolov8n.pt')
 
 @app.before_request
 def log_request_info():
@@ -64,4 +64,4 @@ def predict():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)  # Changed port to 5000
+    app.run(host='0.0.0.0', port=5000)
