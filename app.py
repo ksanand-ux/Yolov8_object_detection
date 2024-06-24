@@ -1,12 +1,11 @@
-from flask import Flask, request, send_file, jsonify
-from ultralytics import YOLO
-import os
-import cv2
-import logging
 import io
-from PIL import Image
+import logging
+
+from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
 from flask_executor import Executor
+from PIL import Image
+from ultralytics import YOLO
 
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
