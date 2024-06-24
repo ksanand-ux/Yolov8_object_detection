@@ -1,4 +1,10 @@
 import logging
+from flask import Flask, request, jsonify, send_file
+from ultralytics import YOLO
+import io
+from PIL import Image
+import numpy as np
+import cv2
 
 # Configure logging
 logging.basicConfig(
@@ -7,13 +13,6 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s: %(message)s',  # Log format
     datefmt='%Y-%m-%d %H:%M:%S'        # Date format
 )
-
-from flask import Flask, request, jsonify, send_file
-from ultralytics import YOLO
-import io
-from PIL import Image
-import numpy as np
-import cv2
 
 app = Flask(__name__)
 model = YOLO('yolov8n.pt')  # Load the saved model
