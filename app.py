@@ -1,16 +1,36 @@
-import io
+import logging
 
-import cv2
-import numpy as np
-from flask import Flask, jsonify, request, send_file
-from PIL import Image
+# Configure logging
+logging.basicConfig(
+    filename='app.log',               # The file where logs will be saved
+    level=logging.DEBUG,               # Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format='%(asctime)s %(levelname)s: %(message)s',  # Log format
+    datefmt='%Y-%m-%d %H:%M:%S'        # Date format
+)
+
+from flask import Flask, request, jsonify, send_file
 from ultralytics import YOLO
+import io
+from PIL import Image
+import numpy as np
+import cv2
 
 app = Flask(__name__)
-model = YOLO('yolov8n.pt')  # Load the model
+model = YOLO('yolov8n.pt')  # Load the saved model
+
+@app.before_request
+def log_request_info():
+    app.logger.debug(f'Request Headers: {request.headers}')
+    app.logger.debug(f'Request Body: {request.get_data()}')
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f'Error: {e}')
+    return str(e), 500
 
 @app.route('/')
 def index():
+    app.logger.info('Processing default request')
     return "Welcome to the YOLOv8 Object Detection API!"
 
 @app.route('/predict', methods=['POST'])
@@ -41,7 +61,7 @@ def predict():
         
         return send_file(img_io, mimetype='image/jpeg')
     except Exception as e:
-        print(f"Error: {e}")
+        app.logger.error(f'Error: {e}')
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
