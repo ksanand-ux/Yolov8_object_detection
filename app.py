@@ -5,6 +5,8 @@ import io
 from PIL import Image
 import numpy as np
 import cv2
+from flask_caching import Cache
+from flask_executor import Executor
 
 # Configure logging
 logging.basicConfig(
@@ -17,10 +19,24 @@ logging.basicConfig(
 app = Flask(__name__)
 model = YOLO('yolov8n.pt')
 
+# Initialize Cache
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+# Initialize Executor
+executor = Executor(app)
+
 @app.before_request
 def log_request_info():
     app.logger.debug(f'Request Headers: {request.headers}')
     app.logger.debug(f'Request Body: {request.get_data()}')
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify({'error': 'Not Found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Internal Server Error'}), 500
 
 @app.errorhandler(Exception)
 def handle_exception(e):
@@ -33,6 +49,7 @@ def index():
     return "Welcome to the YOLOv8 Object Detection API!"
 
 @app.route('/predict', methods=['POST'])
+@cache.cached(timeout=60, query_string=True)
 def predict():
     try:
         if 'file' not in request.files:
@@ -62,6 +79,17 @@ def predict():
     except Exception as e:
         app.logger.error(f'Error: {e}')
         return jsonify({'error': str(e)}), 500
+
+def long_running_function():
+    # Simulate a long running task
+    import time
+    time.sleep(10)
+    return 'Task completed!'
+
+@app.route('/longtask')
+def longtask():
+    executor.submit(long_running_function)
+    return 'Task started!'
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
