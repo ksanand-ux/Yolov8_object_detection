@@ -1,23 +1,24 @@
 import logging
 from flask import Flask, request, send_file, jsonify
 from ultralytics import YOLO
-import os
+import io
+from PIL import Image
 
+# Initialize Flask app
 app = Flask(__name__)
-model = YOLO('yolov8n.pt')
 
 # Configure logging
 logging.basicConfig(filename='app.log', level=logging.DEBUG, 
                     format='%(asctime)s %(levelname)s: %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
+# Load YOLO model
+model = YOLO('yolov8n.pt')
+
 @app.before_request
 def log_request_info():
     app.logger.debug(f'Request Headers: {request.headers}')
-    if request.content_type.startswith('multipart/form-data'):
-        app.logger.debug('Request Body: Binary data not logged')
-    else:
-        app.logger.debug(f'Request Body: {request.get_data()}')
+    app.logger.debug(f'Request Body: {request.get_data()}')
 
 @app.errorhandler(Exception)
 def handle_exception(e):
@@ -31,23 +32,21 @@ def index():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    try:
-        file = request.files['file']
-        image_path = os.path.join("data", file.filename)
-        file.save(image_path)
-        app.logger.info(f"Image saved to {image_path}")
-        
-        results = model(image_path)
-        result_image_path = os.path.join("data", "result.jpg")
-        results.save(save_dir="data")
-        app.logger.info(f"Result image saved to {result_image_path}")
-        
-        os.remove(image_path)  # Clean up the uploaded image
-        
-        return send_file(result_image_path, mimetype='image/jpeg')
-    except Exception as e:
-        app.logger.error(f"Error during prediction: {e}")
-        return jsonify({"error": str(e)}), 500
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file:
+        image = Image.open(file.stream)
+        results = model(image)
+        # Process and save the image with detections
+        result_image = results[0].plot()
+        img_io = io.BytesIO()
+        result_image.save(img_io, 'JPEG')
+        img_io.seek(0)
+        return send_file(img_io, mimetype='image/jpeg')
+    return jsonify({'error': 'File processing error'}), 500
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
