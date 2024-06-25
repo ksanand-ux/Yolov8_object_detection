@@ -15,7 +15,7 @@ WORKDIR $APP_HOME
 COPY . ./
 
 # Install Python dependencies
-RUN pip install --no-cache-dir flask ultralytics torch pillow opencv-python-headless
+RUN pip install --no-cache-dir flask flask_caching flask_executor ultralytics torch pillow opencv-python-headless
 
 # Run the web service on container startup.
 CMD ["python", "app.py"]
