@@ -1,8 +1,6 @@
 import io
 import logging
-import os
 
-import cv2
 from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
 from flask_executor import Executor
@@ -45,7 +43,7 @@ def predict():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     if file:
-        image = Image.open(file.stream)
+        image = Image.open(file.stream).convert("RGB")
         results = model(image)
         # Process and save the image with detections
         result_image = results[0].plot()
