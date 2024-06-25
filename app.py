@@ -51,9 +51,9 @@ def predict():
         results = model(image)
         app.logger.info(f'Detection results: {results}')
         # Process and save the image with detections
-        result_image = results[0].plot()
+        result_image = results[0].plot(show=False)  # Ensure no GUI window is opened
         img_io = io.BytesIO()
-        result_image.save(img_io, 'JPEG')
+        result_image.save(img_io, format='JPEG')
         img_io.seek(0)
         app.logger.info('Image processed and sent back')
         return send_file(img_io, mimetype='image/jpeg')
