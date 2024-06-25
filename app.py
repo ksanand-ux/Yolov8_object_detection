@@ -37,27 +37,20 @@ def index():
 @app.route('/predict', methods=['POST'])
 @cache.cached(timeout=60, query_string=True)
 def predict():
-    app.logger.info('Prediction request received')
     if 'file' not in request.files:
-        app.logger.error('No file part')
         return jsonify({'error': 'No file part'}), 400
     file = request.files['file']
     if file.filename == '':
-        app.logger.error('No selected file')
         return jsonify({'error': 'No selected file'}), 400
     if file:
-        app.logger.info(f'Processing file: {file.filename}')
         image = Image.open(file.stream).convert("RGB")
         results = model(image)
-        app.logger.info(f'Detection results: {results}')
         # Process and save the image with detections
         result_image = results[0].plot(show=False)  # Ensure no GUI window is opened
         img_io = io.BytesIO()
         result_image.save(img_io, format='JPEG')
         img_io.seek(0)
-        app.logger.info('Image processed and sent back')
         return send_file(img_io, mimetype='image/jpeg')
-    app.logger.error('File processing error')
     return jsonify({'error': 'File processing error'}), 500
 
 @app.route('/longtask')
