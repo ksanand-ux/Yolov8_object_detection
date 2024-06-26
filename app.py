@@ -88,15 +88,15 @@ def predict():
         image = Image.open(file.stream).convert("RGB")
         app.logger.info(f'Processing image: {file.filename}')
         results = model(image)
-        # Convert NumPy array to PIL Image
-        result_image = Image.fromarray(results[0].plot())
+        result_image = results[0].plot(show=False)  # Generate plot without showing
         img_io = io.BytesIO()
-        result_image.save(img_io, 'JPEG')
+        result_image.save(img_io, format='JPEG')
         img_io.seek(0)
         app.logger.info('Image processed successfully')
         return send_file(img_io, mimetype='image/jpeg')
     app.logger.error('File processing error')
     return jsonify({'error': 'File processing error'}), 500
+
 
 @app.route('/longtask')
 def longtask():
