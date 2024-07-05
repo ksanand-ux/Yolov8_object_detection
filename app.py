@@ -85,18 +85,30 @@ def predict():
         app.logger.error('No selected file')
         return jsonify({'error': 'No selected file'}), 400
     if file:
-        image = Image.open(file.stream).convert("RGB")
-        app.logger.info(f'Processing image: {file.filename}')
-        results = model(image)
-        result_image = results[0].plot(show=False)  # Generate plot without showing
-        img_io = io.BytesIO()
-        result_image.save(img_io, format='JPEG')
-        img_io.seek(0)
-        app.logger.info('Image processed successfully')
-        return send_file(img_io, mimetype='image/jpeg')
+        try:
+            image = Image.open(file.stream).convert("RGB")
+            app.logger.info(f'Processing image: {file.filename}')
+            results = model(image)
+            result_image = results[0].plot(show=False)  # Generate plot without showing
+            img_io = io.BytesIO()
+            result_image.save(img_io, format='JPEG')
+            img_io.seek(0)
+            app.logger.info(f'Image processed successfully, buffer size: {img_io.getbuffer().nbytes}')
+            
+            # Test to ensure the image buffer contains valid image data
+            try:
+                Image.open(img_io).verify()
+                app.logger.info('Image buffer is valid')
+            except Exception as e:
+                app.logger.error(f'Image buffer is invalid: {e}')
+                return jsonify({'error': 'Image buffer is invalid'}), 500
+
+            return send_file(img_io, mimetype='image/jpeg')
+        except Exception as e:
+            app.logger.error(f'Error processing file: {e}')
+            return jsonify({'error': 'Error processing file'}), 500
     app.logger.error('File processing error')
     return jsonify({'error': 'File processing error'}), 500
-
 
 @app.route('/longtask')
 def longtask():
