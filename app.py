@@ -88,23 +88,9 @@ def predict():
     
     if file:
         try:
-            # Open the image file
             image = Image.open(file.stream).convert("RGB")
             app.logger.info(f'Processing image: {file.filename}')
-        except Exception as e:
-            app.logger.error(f'Error opening file: {e}')
-            return jsonify({'error': 'Error opening file'}), 500
-        
-        try:
-            # Perform model prediction
             results = model(image)
-            app.logger.info('Model prediction completed successfully')
-        except Exception as e:
-            app.logger.error(f'Error during model prediction: {e}')
-            return jsonify({'error': 'Error during model prediction'}), 500
-        
-        try:
-            # Process the result image
             result_image = results[0].plot(show=False)  # Generate plot without showing
             img_io = io.BytesIO()
             result_image.save(img_io, format='JPEG')
