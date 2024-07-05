@@ -113,13 +113,14 @@ def predict():
             
             # Test to ensure the image buffer contains valid image data
             try:
+                img_io.seek(0)  # Ensure the buffer is at the beginning before verifying
                 Image.open(img_io).verify()
                 app.logger.info('Image buffer is valid')
             except Exception as e:
                 app.logger.error(f'Image buffer is invalid: {e}')
                 return jsonify({'error': 'Image buffer is invalid'}), 500
             
-            # Return the image as a response
+            img_io.seek(0)  # Ensure the buffer is at the beginning before sending
             return send_file(img_io, mimetype='image/jpeg')
         except Exception as e:
             app.logger.error(f'Error processing file: {e}')
