@@ -36,8 +36,8 @@ RUN rm /etc/nginx/sites-enabled/default
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/conf.d
 
-# Expose port 5000
-EXPOSE 5000
+# Expose port 8080
+EXPOSE 8080
 
 # Run the web service on container startup.
-CMD service nginx start && gunicorn --workers 4 --bind 0.0.0.0:5000 app:app
+CMD service nginx start && gunicorn --workers 4 --bind 0.0.0.0:8080 app:app
