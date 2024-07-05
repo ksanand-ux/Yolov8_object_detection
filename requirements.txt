@@ -1,6 +1,10 @@
-flask
-flask_caching
-flask_executor
+Flask
+flask-caching
+flask-executor
 ultralytics
+torch
+pillow
 opencv-python-headless
-Pillow
+prometheus-flask-exporter
+pyjwt
+gunicorn
