@@ -101,11 +101,16 @@ def predict():
             # Perform model prediction
             results = model(image)
             app.logger.info(f'Model prediction completed successfully, Results: {results}')
-        
+        except Exception as e:
+            app.logger.error(f'Error during model prediction: {e}')
+            return jsonify({'error': 'Error during model prediction'}), 500
+
+        try:
             # Process and encode the result images
             img_bytes = io.BytesIO()
-            result_image = results[0].plot()  
-            result_image.save(img_bytes, format='JPEG')
+            for result in results:
+                result_image = result.plot()  
+                result_image.save(img_bytes, format='JPEG')
             img_bytes.seek(0)
             app.logger.info(f'Result image(s) generated and encoded successfully, size: {img_bytes.getbuffer().nbytes} bytes')
             return send_file(img_bytes, mimetype='image/jpeg')

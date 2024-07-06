@@ -10,10 +10,11 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     nginx
 
+# Set the working directory
+WORKDIR /app
+
 # Copy local code to the container image.
-ENV APP_HOME /app
-WORKDIR $APP_HOME
-COPY . ./
+COPY . .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir \
@@ -22,10 +23,7 @@ RUN pip install --no-cache-dir \
     flask_executor \
     flask_cors \
     ultralytics \
-    torch \
-    pillow \
-    opencv-python-headless \
-    prometheus_flask_exporter \
+    prometheus-flask-exporter \
     pyjwt \
     gunicorn
 
