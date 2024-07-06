@@ -4,6 +4,7 @@ import logging
 from functools import wraps
 
 import jwt
+import matplotlib.pyplot as plt
 from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
 from flask_cors import CORS
@@ -120,6 +121,11 @@ def predict():
                 result_image.save(img_bytes, format='JPEG')  # Save each plot
             img_bytes.seek(0)
             app.logger.info(f'Result image(s) generated and encoded successfully, size: {img_bytes.getbuffer().nbytes} bytes')
+            # Clear the figure to release resources
+            fig.clf()
+            plt.close(fig)
+
+            # Return only the image data
             return send_file(img_bytes, mimetype='image/jpeg')
 
         except Exception as e:
