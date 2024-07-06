@@ -106,17 +106,14 @@ def predict():
         try:
             # Process the result image
             result_image = results[0].plot(show=False)  # Generate plot without showing
-            img_io = io.BytesIO()
-            result_image.save(img_io, format='JPEG')
-            img_io.seek(0)
-            app.logger.info(f'Image processed successfully, buffer size: {img_io.getbuffer().nbytes}')
             
-            # Save the image to a file for verification
-            with open('/app/temp_image.jpg', 'wb') as temp_file:
-                temp_file.write(img_io.getbuffer())
+            # Save the image to disk for verification
+            result_image_path = '/app/temp_image.jpg'
+            result_image.save(result_image_path)
+            app.logger.info(f'Image saved to disk at {result_image_path}')
             
             # Return the image as a response
-            return send_file(io.BytesIO(img_io.getbuffer()), mimetype='image/jpeg')
+            return send_file(result_image_path, mimetype='image/jpeg')
         except Exception as e:
             app.logger.error(f'Error processing file: {e}')
             return jsonify({'error': 'Error processing file'}), 500
