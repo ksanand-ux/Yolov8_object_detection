@@ -92,7 +92,7 @@ def predict():
         try:
             # Open the image file
             image = Image.open(file.stream).convert("RGB")
-            app.logger.info(f'Processing image: {file.filename}')
+            app.logger.info(f'Processing image: {file.filename}, Format: {image.format}, Size: {image.size}')
         except Exception as e:
             app.logger.error(f'Error opening file: {e}')
             return jsonify({'error': 'Error opening file'}), 500
@@ -100,7 +100,7 @@ def predict():
         try:
             # Perform model prediction
             results = model(image)
-            app.logger.info('Model prediction completed successfully')
+            app.logger.info(f'Model prediction completed successfully, Results: {results}')
         except Exception as e:
             app.logger.error(f'Error during model prediction: {e}')
             return jsonify({'error': 'Error during model prediction'}), 500
@@ -111,8 +111,8 @@ def predict():
             img_bytes = io.BytesIO()
             result_image.save(img_bytes, format='JPEG')
             img_bytes.seek(0)  # Reset file pointer for sending
-
             app.logger.info(f'Result image generated and encoded successfully, size: {img_bytes.getbuffer().nbytes} bytes')
+
             return send_file(img_bytes, mimetype='image/jpeg')
 
         except Exception as e:
