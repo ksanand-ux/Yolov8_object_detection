@@ -111,24 +111,15 @@ def predict():
             img_io.seek(0)
             app.logger.info(f'Image processed successfully, buffer size: {img_io.getbuffer().nbytes}')
             
-            # Test to ensure the image buffer contains valid image data
-            try:
-                img_io.seek(0)  # Ensure the buffer is at the beginning before verifying
-                Image.open(img_io).verify()
-                app.logger.info('Image buffer is valid')
-            except Exception as e:
-                app.logger.error(f'Image buffer is invalid: {e}')
-                return jsonify({'error': 'Image buffer is invalid'}), 500
+            # Save the image to a file for verification
+            with open('/app/temp_image.jpg', 'wb') as temp_file:
+                temp_file.write(img_io.getbuffer())
             
-            img_io.seek(0)  # Ensure the buffer is at the beginning before sending
-            return send_file(img_io, mimetype='image/jpeg')
+            # Return the image as a response
+            return send_file(io.BytesIO(img_io.getbuffer()), mimetype='image/jpeg')
         except Exception as e:
             app.logger.error(f'Error processing file: {e}')
             return jsonify({'error': 'Error processing file'}), 500
-    
-    app.logger.error('File processing error')
-    return jsonify({'error': 'File processing error'}), 500
-
     
     app.logger.error('File processing error')
     return jsonify({'error': 'File processing error'}), 500
