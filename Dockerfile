@@ -5,12 +5,10 @@ FROM python:3.8-slim
 ENV PYTHONUNBUFFERED True
 
 # Install dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
-    nginx \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    nginx
 
 # Copy local code to the container image.
 ENV APP_HOME /app
@@ -22,6 +20,7 @@ RUN pip install --no-cache-dir \
     flask \
     flask_caching \
     flask_executor \
+    flask_cors \
     ultralytics \
     torch \
     pillow \
@@ -30,14 +29,5 @@ RUN pip install --no-cache-dir \
     pyjwt \
     gunicorn
 
-# Remove default nginx configuration
-RUN rm /etc/nginx/sites-enabled/default
-
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d
-
-# Expose port 8080
-EXPOSE 8080
-
 # Run the web service on container startup.
-CMD service nginx start && gunicorn --workers 4 --bind 0.0.0.0:8080 app:app
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
