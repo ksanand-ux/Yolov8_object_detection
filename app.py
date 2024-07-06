@@ -6,12 +6,14 @@ from functools import wraps
 import jwt
 from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
+from flask_cors import CORS
 from flask_executor import Executor
 from PIL import Image
 from prometheus_flask_exporter import PrometheusMetrics
 from ultralytics import YOLO
 
 app = Flask(__name__)
+CORS(app)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 executor = Executor(app)
 metrics = PrometheusMetrics(app)
@@ -110,7 +112,7 @@ def predict():
             result_image.save(img_bytes, format='JPEG')
             img_bytes.seek(0)  # Reset file pointer for sending
 
-            app.logger.info('Result image generated and encoded successfully')
+            app.logger.info(f'Result image generated and encoded successfully, size: {img_bytes.getbuffer().nbytes} bytes')
             return send_file(img_bytes, mimetype='image/jpeg')
 
         except Exception as e:
