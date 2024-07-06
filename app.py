@@ -112,8 +112,21 @@ def predict():
             result_image.save(result_image_path)
             app.logger.info(f'Image saved to disk at {result_image_path}')
             
-            # Return the image as a response
-            return send_file(result_image_path, mimetype='image/jpeg')
+            # Ensure the saved image is readable and correct
+            with open(result_image_path, 'rb') as f:
+                img_io = io.BytesIO(f.read())
+                try:
+                    # Verify the image
+                    Image.open(img_io).verify()
+                    app.logger.info('Image verification successful')
+                except Exception as e:
+                    app.logger.error(f'Error verifying image: {e}')
+                    return jsonify({'error': 'Image verification failed'}), 500
+            
+            # Reset the buffer position to the beginning
+            img_io.seek(0)
+            
+            return send_file(img_io, mimetype='image/jpeg')
         except Exception as e:
             app.logger.error(f'Error processing file: {e}')
             return jsonify({'error': 'Error processing file'}), 500
