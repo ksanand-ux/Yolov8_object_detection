@@ -9,6 +9,7 @@ from flask_caching import Cache
 from flask_cors import CORS
 from flask_executor import Executor
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 from PIL import Image
 from prometheus_flask_exporter import PrometheusMetrics
 from ultralytics import YOLO
@@ -107,7 +108,12 @@ def predict():
             # Process and encode the result images
             img_bytes = io.BytesIO()
             for result in results:
-                fig = result.plot()  # Get the matplotlib figure
+                # Create figure and axes explicitly
+                fig = Figure()
+                ax = fig.add_subplot(111)
+                # Plot on the axes
+                result.plot(ax=ax)
+                # Convert to PIL Image
                 canvas = FigureCanvas(fig)
                 canvas.draw()
                 result_image = Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())  # Convert to PIL Image
@@ -117,8 +123,10 @@ def predict():
             return send_file(img_bytes, mimetype='image/jpeg')
 
         except Exception as e:
-            app.logger.error(f'Error processing result image(s): {e}')
+            app.logger.error(f'Error processing result image(s): {type(e).__name__} - {e}', exc_info=True)  # Log exception type and traceback
             return jsonify({'error': 'Error processing result image(s)'}), 500
+
+    # ... (rest of your code)
 
     app.logger.error('File processing error')
     return jsonify({'error': 'File processing error'}), 500
