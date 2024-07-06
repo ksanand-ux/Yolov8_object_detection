@@ -9,7 +9,6 @@ from flask_caching import Cache
 from flask_cors import CORS
 from flask_executor import Executor
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
 from PIL import Image
 from prometheus_flask_exporter import PrometheusMetrics
 from ultralytics import YOLO
@@ -30,6 +29,7 @@ model = YOLO('yolov8n.pt')
 
 SECRET_KEY = 'your_secret_key'
 
+# Authentication functions
 def encode_auth_token(user_id):
     try:
         payload = {
@@ -103,19 +103,15 @@ def predict():
             # Perform model prediction
             results = model(image)
             app.logger.info(f'Model prediction completed successfully, Results: {results}')
-        except Exception as e:
-            app.logger.error(f'Error during model prediction: {e}')
-            return jsonify({'error': 'Error during model prediction'}), 500
-
-        try:
+        
             # Process and encode the result images
             img_bytes = io.BytesIO()
             for result in results:
                 fig = result.plot()  # Get the matplotlib figure
                 canvas = FigureCanvas(fig)
                 canvas.draw()
-                result_image = Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())  # Convert to PIL Image  
-                result_image.save(img_bytes, format='JPEG')
+                result_image = Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())  # Convert to PIL Image
+                result_image.save(img_bytes, format='JPEG')  # Save each plot
             img_bytes.seek(0)
             app.logger.info(f'Result image(s) generated and encoded successfully, size: {img_bytes.getbuffer().nbytes} bytes')
             return send_file(img_bytes, mimetype='image/jpeg')
