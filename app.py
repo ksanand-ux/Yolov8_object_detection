@@ -8,6 +8,8 @@ from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
 from flask_cors import CORS
 from flask_executor import Executor
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 from PIL import Image
 from prometheus_flask_exporter import PrometheusMetrics
 from ultralytics import YOLO
@@ -109,7 +111,10 @@ def predict():
             # Process and encode the result images
             img_bytes = io.BytesIO()
             for result in results:
-                result_image = result.plot()  
+                fig = result.plot()  # Get the matplotlib figure
+                canvas = FigureCanvas(fig)
+                canvas.draw()
+                result_image = Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())  # Convert to PIL Image  
                 result_image.save(img_bytes, format='JPEG')
             img_bytes.seek(0)
             app.logger.info(f'Result image(s) generated and encoded successfully, size: {img_bytes.getbuffer().nbytes} bytes')
