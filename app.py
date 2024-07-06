@@ -80,12 +80,12 @@ def predict():
     if 'file' not in request.files:
         app.logger.error('No file part in the request')
         return jsonify({'error': 'No file part'}), 400
-    
+
     file = request.files['file']
     if file.filename == '':
         app.logger.error('No selected file')
         return jsonify({'error': 'No selected file'}), 400
-    
+
     if file:
         try:
             # Open the image file
@@ -94,7 +94,7 @@ def predict():
         except Exception as e:
             app.logger.error(f'Error opening file: {e}')
             return jsonify({'error': 'Error opening file'}), 500
-        
+
         try:
             # Perform model prediction
             results = model(image)
@@ -102,34 +102,21 @@ def predict():
         except Exception as e:
             app.logger.error(f'Error during model prediction: {e}')
             return jsonify({'error': 'Error during model prediction'}), 500
-        
+
         try:
-            # Process the result image
-            result_image = results[0].plot(show=False)  # Generate plot without showing
-            app.logger.info('Result image generated successfully')
-            
-            # Save the image to disk for verification
-            result_image_path = '/app/temp_image.jpg'
-            result_image.save(result_image_path)
-            app.logger.info(f'Image saved to disk at {result_image_path}')
-            
-            # Verify the saved image is a valid JPEG
-            try:
-                with open(result_image_path, 'rb') as f:
-                    img_data = f.read()
-                img_io = io.BytesIO(img_data)
-                Image.open(img_io).verify()
-                app.logger.info('Image verification successful')
-            except Exception as e:
-                app.logger.error(f'Image verification failed: {e}')
-                return jsonify({'error': 'Image verification failed'}), 500
-            
-            img_io.seek(0)
-            return send_file(img_io, mimetype='image/jpeg')
+            # Process and encode the result image
+            result_image = results[0].plot(show=False)
+            img_bytes = io.BytesIO()
+            result_image.save(img_bytes, format='JPEG')
+            img_bytes.seek(0)  # Reset file pointer for sending
+
+            app.logger.info('Result image generated and encoded successfully')
+            return send_file(img_bytes, mimetype='image/jpeg')
+
         except Exception as e:
-            app.logger.error(f'Error processing file: {e}')
-            return jsonify({'error': 'Error processing file'}), 500
-    
+            app.logger.error(f'Error processing result image: {e}')
+            return jsonify({'error': 'Error processing result image'}), 500
+
     app.logger.error('File processing error')
     return jsonify({'error': 'File processing error'}), 500
 
