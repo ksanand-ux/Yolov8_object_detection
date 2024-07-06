@@ -106,26 +106,25 @@ def predict():
         try:
             # Process the result image
             result_image = results[0].plot(show=False)  # Generate plot without showing
+            app.logger.info('Result image generated successfully')
             
             # Save the image to disk for verification
             result_image_path = '/app/temp_image.jpg'
             result_image.save(result_image_path)
             app.logger.info(f'Image saved to disk at {result_image_path}')
             
-            # Ensure the saved image is readable and correct
-            with open(result_image_path, 'rb') as f:
-                img_io = io.BytesIO(f.read())
-                try:
-                    # Verify the image
-                    Image.open(img_io).verify()
-                    app.logger.info('Image verification successful')
-                except Exception as e:
-                    app.logger.error(f'Error verifying image: {e}')
-                    return jsonify({'error': 'Image verification failed'}), 500
+            # Verify the saved image is a valid JPEG
+            try:
+                with open(result_image_path, 'rb') as f:
+                    img_data = f.read()
+                img_io = io.BytesIO(img_data)
+                Image.open(img_io).verify()
+                app.logger.info('Image verification successful')
+            except Exception as e:
+                app.logger.error(f'Image verification failed: {e}')
+                return jsonify({'error': 'Image verification failed'}), 500
             
-            # Reset the buffer position to the beginning
             img_io.seek(0)
-            
             return send_file(img_io, mimetype='image/jpeg')
         except Exception as e:
             app.logger.error(f'Error processing file: {e}')
