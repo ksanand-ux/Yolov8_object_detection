@@ -28,9 +28,53 @@ model = YOLO('yolov8n.pt')
 
 SECRET_KEY = 'your_secret_key'
 
-# ... (your authentication functions: encode_auth_token, decode_auth_token, token_required remain the same)
+def encode_auth_token(user_id):
+    try:
+        payload = {
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+            'iat': datetime.datetime.utcnow(),
+            'sub': user_id
+        }
+        return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    except Exception as e:
+        return e
 
-# ... (other routes and error handlers remain the same)
+def decode_auth_token(auth_token):
+    try:
+        payload = jwt.decode(auth_token, SECRET_KEY, algorithms=['HS256'])
+        return payload['sub']
+    except jwt.ExpiredSignatureError:
+        return 'Signature expired. Please log in again.'
+    except jwt.InvalidTokenError:
+        return 'Invalid token. Please log in again.'
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'message': 'Token is missing!'}), 403
+        try:
+            data = decode_auth_token(token)
+        except:
+            return jsonify({'message': 'Token is invalid!'}), 403
+        return f(*args, **kwargs)
+    return decorated
+
+@app.before_request
+def log_request_info():
+    app.logger.debug(f'Request Headers: {request.headers}')
+    app.logger.debug(f'Request Body: {request.get_data()}')
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f'Error: {e}')
+    return str(e), 500
+
+@app.route('/')
+def index():
+    app.logger.info('Processing default request')
+    return "Welcome to the YOLOv8 Object Detection API!"
 
 @app.route('/predict', methods=['POST'])
 @cache.cached(timeout=60, query_string=True)
@@ -60,9 +104,8 @@ def predict():
         
             # Process and encode the result images
             img_bytes = io.BytesIO()
-            for result in results:
-                result_image = result.plot()  
-                result_image.save(img_bytes, format='JPEG')
+            result_image = results[0].plot()  
+            result_image.save(img_bytes, format='JPEG')
             img_bytes.seek(0)
             app.logger.info(f'Result image(s) generated and encoded successfully, size: {img_bytes.getbuffer().nbytes} bytes')
             return send_file(img_bytes, mimetype='image/jpeg')
