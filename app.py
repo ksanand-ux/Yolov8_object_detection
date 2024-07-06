@@ -112,7 +112,7 @@ def predict():
                 fig = Figure()
                 ax = fig.add_subplot(111)
                 # Plot on the axes
-                result.plot(ax=ax)
+                result.plot()
                 # Convert to PIL Image
                 canvas = FigureCanvas(fig)
                 canvas.draw()
