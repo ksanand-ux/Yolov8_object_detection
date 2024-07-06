@@ -105,34 +105,34 @@ def predict():
             # Perform model prediction
             results = model(image)
             app.logger.info(f'Model prediction completed successfully, Results: {results}')
-        
+        except Exception as e:
+            app.logger.error(f'Error during model prediction: {e}')
+            return jsonify({'error': 'Error during model prediction'}), 500
+
+        try:
             # Process and encode the result images
             img_bytes = io.BytesIO()
             for result in results:
-                # Create figure and axes explicitly
                 fig = Figure()
                 ax = fig.add_subplot(111)
-                # Plot on the axes
-                result.plot()
+                result.plot(ax=ax)
+                
                 # Convert to PIL Image
                 canvas = FigureCanvas(fig)
                 canvas.draw()
-                result_image = Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())  # Convert to PIL Image
-                result_image.save(img_bytes, format='JPEG')  # Save each plot
+                width, height = fig.canvas.get_width_height()
+                result_image = Image.frombytes('RGB', (width, height), fig.canvas.tostring_rgb())
+                
+                result_image.save(img_bytes, format='JPEG')
+                plt.close(fig)  # Close the figure
+                
             img_bytes.seek(0)
             app.logger.info(f'Result image(s) generated and encoded successfully, size: {img_bytes.getbuffer().nbytes} bytes')
-            # Clear the figure to release resources
-            fig.clf()
-            plt.close(fig)
-
-            # Return only the image data
             return send_file(img_bytes, mimetype='image/jpeg')
 
         except Exception as e:
-            app.logger.error(f'Error processing result image(s): {type(e).__name__} - {e}', exc_info=True)  # Log exception type and traceback
+            app.logger.error(f'Error processing result image(s): {type(e).__name__} - {e}', exc_info=True)
             return jsonify({'error': 'Error processing result image(s)'}), 500
-
-    # ... (rest of your code)
 
     app.logger.error('File processing error')
     return jsonify({'error': 'File processing error'}), 500
