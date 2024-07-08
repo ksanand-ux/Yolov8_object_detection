@@ -1,9 +1,11 @@
+import base64
 import datetime
 import io
 import logging
 from functools import wraps
 
 import jwt
+import matplotlib.pyplot as plt
 from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
 from flask_cors import CORS
@@ -82,7 +84,86 @@ def predict():
     if 'file' not in request.files:
         app.logger.error('No file part in the request')
         return jsonify({'error': 'No file part'}), 400
+
     file = request.files['file']
     if file.filename == '':
         app.logger.error('No selected file')
-        return jso
+        return jsonify({'error': 'No selected file'}), 400
+
+    if file:
+        try:
+            # Open the image file
+            image = Image.open(file.stream).convert("RGB")
+            app.logger.info(f'Processing image: {file.filename}')
+            
+            # Perform model prediction
+            results = model(image)
+
+            # Process detection results
+            detections = []
+            for r in results:
+                for box in r.boxes:
+                    detections.append({
+                        'class': model.names[int(box.cls[0])],
+                        'confidence': round(float(box.conf[0]), 2),
+                        'x1': int(box.xyxy[0][0]),
+                        'y1': int(box.xyxy[0][1]),
+                        'x2': int(box.xyxy[0][2]),
+                        'y2': int(box.xyxy[0][3]),
+                    })
+
+            # Draw bounding boxes and labels on the image
+            img_with_boxes = image.copy()  
+            draw = ImageDraw.Draw(img_with_boxes)
+            for detection in detections:
+                x1, y1, x2, y2 = detection['x1'], detection['y1'], detection['x2'], detection['y2']
+                label = f"{detection['class']} {detection['confidence']:.2f}"
+                draw.rectangle([x1, y1, x2, y2], outline='red', width=2)
+                draw.text((x1, y1 - 10), label, fill='white')
+
+            # Convert image with annotations to bytes
+            img_io = io.BytesIO()
+            img_with_boxes.save(img_io, 'JPEG')
+            img_io.seek(0)
+            app.logger.info('Image processed successfully')
+
+            # Encode the image data in base64
+            img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
+
+            # Return the image as base64 string along with detections
+            return jsonify({'image': img_base64, 'detections': detections})
+
+        except Exception as e:
+            app.logger.error(f'Error processing image: {e}')
+            return jsonify({'error': 'File processing error'}), 500
+
+    app.logger.error('File processing error')
+    return jsonify({'error': 'File processing error'}), 500
+
+@app.route('/longtask')
+def longtask():
+    executor.submit(long_running_function)
+    return 'Task started!'
+
+@app.route('/protected', methods=['GET'])
+@token_required
+def protected():
+    return jsonify({'message': 'This is a protected endpoint.'})
+
+@app.errorhandler(404)
+def not_found_error(error):
+    app.logger.error('404 Not Found: %s', request.url)
+    return jsonify({'error': 'Not Found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    app.logger.error('500 Internal Server Error: %s', request.url)
+    return jsonify({'error': 'Internal Server Error'}), 500
+
+def long_running_function():
+    import time
+    time.sleep(5)
+    app.logger.info('Long running function completed.')
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
