@@ -1,11 +1,9 @@
-import base64
 import datetime
 import io
 import logging
 from functools import wraps
 
 import jwt
-import matplotlib.pyplot as plt
 from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
 from flask_cors import CORS
@@ -70,7 +68,7 @@ def log_request_info():
 
 @app.errorhandler(Exception)
 def handle_exception(e):
-    app.logger.error(f'Error: {e}')
+    app.logger.error(f'Error: {e}', exc_info=True)
     return str(e), 500
 
 @app.route('/')
@@ -81,64 +79,49 @@ def index():
 @app.route('/predict', methods=['POST'])
 @cache.cached(timeout=60, query_string=True)
 def predict():
-    if 'file' not in request.files:
-        app.logger.error('No file part in the request')
-        return jsonify({'error': 'No file part'}), 400
+    try:
+        if 'file' not in request.files:
+            app.logger.error('No file part in the request')
+            return jsonify({'error': 'No file part'}), 400
 
-    file = request.files['file']
-    if file.filename == '':
-        app.logger.error('No selected file')
-        return jsonify({'error': 'No selected file'}), 400
+        file = request.files['file']
+        if file.filename == '':
+            app.logger.error('No selected file')
+            return jsonify({'error': 'No selected file'}), 400
 
-    if file:
         try:
-            # Open the image file
             image = Image.open(file.stream).convert("RGB")
             app.logger.info(f'Processing image: {file.filename}')
-            
-            # Perform model prediction
             results = model(image)
+        except Exception as e:
+            app.logger.error(f'Error during model prediction: {e}', exc_info=True)
+            return jsonify({'error': 'Error during model prediction'}), 500
 
-            # Process detection results
-            detections = []
-            for r in results:
-                for box in r.boxes:
-                    detections.append({
-                        'class': model.names[int(box.cls[0])],
-                        'confidence': round(float(box.conf[0]), 2),
-                        'x1': int(box.xyxy[0][0]),
-                        'y1': int(box.xyxy[0][1]),
-                        'x2': int(box.xyxy[0][2]),
-                        'y2': int(box.xyxy[0][3]),
-                    })
-
+        try:
             # Draw bounding boxes and labels on the image
-            img_with_boxes = image.copy()  
-            draw = ImageDraw.Draw(img_with_boxes)
-            for detection in detections:
-                x1, y1, x2, y2 = detection['x1'], detection['y1'], detection['x2'], detection['y2']
-                label = f"{detection['class']} {detection['confidence']:.2f}"
-                draw.rectangle([x1, y1, x2, y2], outline='red', width=2)
-                draw.text((x1, y1 - 10), label, fill='white')
+            draw = ImageDraw.Draw(image)
+            font = ImageFont.load_default()
 
-            # Convert image with annotations to bytes
+            for result in results:
+                for box in result.boxes:
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                    label = f"{result.names[int(box.cls[0])]} {box.conf[0]:.2f}"
+                    draw.rectangle([x1, y1, x2, y2], outline="red", width=2)
+                    draw.text((x1, y1), label, fill="white", font=font)
+
+            # Save image to BytesIO
             img_io = io.BytesIO()
-            img_with_boxes.save(img_io, 'JPEG')
+            image.save(img_io, 'JPEG')
             img_io.seek(0)
             app.logger.info('Image processed successfully')
-
-            # Encode the image data in base64
-            img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
-
-            # Return the image as base64 string along with detections
-            return jsonify({'image': img_base64, 'detections': detections})
-
+            return send_file(img_io, mimetype='image/jpeg')
         except Exception as e:
-            app.logger.error(f'Error processing image: {e}')
-            return jsonify({'error': 'File processing error'}), 500
+            app.logger.error(f'Error processing result image: {e}', exc_info=True)
+            return jsonify({'error': 'Error processing result image'}), 500
 
-    app.logger.error('File processing error')
-    return jsonify({'error': 'File processing error'}), 500
+    except Exception as e:
+        app.logger.error(f'Unexpected error: {e}', exc_info=True)
+        return jsonify({'error': 'Unexpected error occurred'}), 500
 
 @app.route('/longtask')
 def longtask():
