@@ -1,4 +1,3 @@
-import base64
 import datetime
 import io
 import logging
@@ -7,14 +6,12 @@ from functools import wraps
 import jwt
 from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
-from flask_cors import CORS
 from flask_executor import Executor
 from PIL import Image
 from prometheus_flask_exporter import PrometheusMetrics
 from ultralytics import YOLO
 
 app = Flask(__name__)
-CORS(app)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 executor = Executor(app)
 metrics = PrometheusMetrics(app)
@@ -91,35 +88,15 @@ def predict():
         image = Image.open(file.stream).convert("RGB")
         app.logger.info(f'Processing image: {file.filename}')
         results = model(image)
-
-        # Process detection results
-        detections = []
-        for r in results:
-            for box in r.boxes:
-                detections.append({
-                    'class': model.names[int(box.cls[0])],
-                    'confidence': round(float(box.conf[0]), 2),
-                    'x1': int(box.xyxy[0][0]),
-                    'y1': int(box.xyxy[0][1]),
-                    'x2': int(box.xyxy[0][2]),
-                    'y2': int(box.xyxy[0][3]),
-                })
-
         # Convert NumPy array to PIL Image
         result_image = Image.fromarray(results[0].plot())
         img_io = io.BytesIO()
         result_image.save(img_io, 'JPEG')
         img_io.seek(0)
         app.logger.info('Image processed successfully')
-
-        # Encode the image data in base64
-        img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
-
-        # Return the image as base64 string along with detections
-        return jsonify({'image': img_base64, 'detections': detections})
+        return send_file(img_io, mimetype='image/jpeg')
     app.logger.error('File processing error')
     return jsonify({'error': 'File processing error'}), 500
-
 
 @app.route('/longtask')
 def longtask():
