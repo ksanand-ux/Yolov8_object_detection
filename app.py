@@ -7,7 +7,7 @@ import jwt
 from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
 from flask_executor import Executor
-from PIL import Image
+from PIL import Image, ImageDraw
 from prometheus_flask_exporter import PrometheusMetrics
 from ultralytics import YOLO
 
@@ -88,10 +88,19 @@ def predict():
         image = Image.open(file.stream).convert("RGB")
         app.logger.info(f'Processing image: {file.filename}')
         results = model(image)
-        # Convert NumPy array to PIL Image
-        result_image = Image.fromarray(results[0].plot())
+
+        # Draw bounding boxes and labels on the image
+        draw = ImageDraw.Draw(image)
+        for result in results:
+            for box in result.boxes:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                label = f"{results.names[int(box.cls[0])]} {box.conf[0]:.2f}"
+                draw.rectangle([x1, y1, x2, y2], outline="red", width=2)
+                draw.text((x1, y1), label, fill="white")
+
+        # Save image to BytesIO
         img_io = io.BytesIO()
-        result_image.save(img_io, 'JPEG')
+        image.save(img_io, 'JPEG')
         img_io.seek(0)
         app.logger.info('Image processed successfully')
         return send_file(img_io, mimetype='image/jpeg')
