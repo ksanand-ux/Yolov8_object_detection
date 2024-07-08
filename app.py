@@ -89,35 +89,26 @@ def predict():
             app.logger.error('No selected file')
             return jsonify({'error': 'No selected file'}), 400
 
-        try:
-            image = Image.open(file.stream).convert("RGB")
-            app.logger.info(f'Processing image: {file.filename}')
-            results = model(image)
-        except Exception as e:
-            app.logger.error(f'Error during model prediction: {e}', exc_info=True)
-            return jsonify({'error': 'Error during model prediction'}), 500
+        image = Image.open(file.stream).convert("RGB")
+        app.logger.info(f'Processing image: {file.filename}')
+        
+        results = model(image)
 
-        try:
-            # Draw bounding boxes and labels on the image
-            draw = ImageDraw.Draw(image)
-            font = ImageFont.load_default()
+        draw = ImageDraw.Draw(image)
+        font = ImageFont.load_default()
 
-            for result in results:
-                for box in result.boxes:
-                    x1, y1, x2, y2 = map(int, box.xyxy[0])
-                    label = f"{result.names[int(box.cls[0])]} {box.conf[0]:.2f}"
-                    draw.rectangle([x1, y1, x2, y2], outline="red", width=2)
-                    draw.text((x1, y1), label, fill="white", font=font)
+        for result in results:
+            for box in result.boxes:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                label = f"{result.names[int(box.cls[0])]} {box.conf[0]:.2f}"
+                draw.rectangle([x1, y1, x2, y2], outline="red", width=2)
+                draw.text((x1, y1), label, fill="white", font=font)
 
-            # Save image to BytesIO
-            img_io = io.BytesIO()
-            image.save(img_io, 'JPEG')
-            img_io.seek(0)
-            app.logger.info('Image processed successfully')
-            return send_file(img_io, mimetype='image/jpeg')
-        except Exception as e:
-            app.logger.error(f'Error processing result image: {e}', exc_info=True)
-            return jsonify({'error': 'Error processing result image'}), 500
+        img_io = io.BytesIO()
+        image.save(img_io, 'JPEG')
+        img_io.seek(0)
+        app.logger.info('Image processed successfully')
+        return send_file(img_io, mimetype='image/jpeg')
 
     except Exception as e:
         app.logger.error(f'Unexpected error: {e}', exc_info=True)
