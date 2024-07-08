@@ -95,20 +95,14 @@ def predict():
         results = model(image)
 
         draw = ImageDraw.Draw(image)
-        try:
-            font = ImageFont.truetype("arial.ttf", 24)  # Use a larger font size
-        except IOError:
-            font = ImageFont.load_default()  # Fallback to default font if truetype font is not available
+        font = ImageFont.load_default()
 
         for result in results:
             for box in result.boxes:
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
                 label = f"{result.names[int(box.cls[0])]} {box.conf[0]:.2f}"
-                draw.rectangle([x1, y1, x2, y2], outline="red", width=3)  # Thicker outline
-                text_size = draw.textsize(label, font=font)
-                text_background = Image.new('RGBA', (text_size[0], text_size[1]), (255, 0, 0, 127))  # Semi-transparent background
-                draw.rectangle([x1, y1 - text_size[1], x1 + text_size[0], y1], fill="red")  # Background for text
-                draw.text((x1, y1 - text_size[1]), label, fill="white", font=font)  # Draw text
+                draw.rectangle([x1, y1, x2, y2], outline="red", width=2)
+                draw.text((x1, y1), label, fill="white", font=font)
 
         img_io = io.BytesIO()
         image.save(img_io, 'JPEG')
