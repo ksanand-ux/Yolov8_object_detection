@@ -7,7 +7,7 @@ import jwt
 from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
 from flask_executor import Executor
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from prometheus_flask_exporter import PrometheusMetrics
 from ultralytics import YOLO
 
@@ -85,43 +85,18 @@ def predict():
         app.logger.error('No selected file')
         return jsonify({'error': 'No selected file'}), 400
     if file:
-        try:
-            image = Image.open(file.stream).convert("RGB")
-            app.logger.info(f'Processing image: {file.filename}')
-            
-            # Perform model prediction
-            results = model(image)
-            img_with_boxes = image.copy()
-            draw = ImageDraw.Draw(img_with_boxes)
-            font = ImageFont.load_default()
-            response_metadata = []
-
-            for result in results:
-                for box in result.boxes:
-                    bbox = box.xyxy[0].tolist()
-                    conf = box.conf[0]
-                    cls = box.cls[0]
-                    label = f"{results.names[int(cls)]} {conf:.2f}"
-                    draw.rectangle(bbox, outline="red", width=2)
-                    draw.text((bbox[0], bbox[1]), label, fill="white", font=font)
-                    response_metadata.append({
-                        "label": label,
-                        "bbox": bbox,
-                        "confidence": conf
-                    })
-
-            # Convert image with annotations to bytes
-            img_io = io.BytesIO()
-            img_with_boxes.save(img_io, 'JPEG')
-            img_io.seek(0)
-
-            app.logger.info('Image processed successfully')
-            
-            # Return image and metadata
-            return send_file(img_io, mimetype='image/jpeg'), jsonify(response_metadata)
-        except Exception as e:
-            app.logger.error(f'Error processing image: {e}')
-            return jsonify({'error': 'File processing error'}), 500
+        image = Image.open(file.stream).convert("RGB")
+        app.logger.info(f'Processing image: {file.filename}')
+        results = model(image)
+        # Convert NumPy array to PIL Image
+        result_image = Image.fromarray(results[0].plot())
+        img_io = io.BytesIO()
+        result_image.save(img_io, 'JPEG')
+        img_io.seek(0)
+        app.logger.info('Image processed successfully')
+        return send_file(img_io, mimetype='image/jpeg')
+    app.logger.error('File processing error')
+    return jsonify({'error': 'File processing error'}), 500
 
 @app.route('/longtask')
 def longtask():
