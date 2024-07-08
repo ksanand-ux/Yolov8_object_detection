@@ -95,7 +95,10 @@ def predict():
         results = model(image)
 
         draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype("arial.ttf", 24)  # Use a larger font size
+        try:
+            font = ImageFont.truetype("arial.ttf", 24)  # Use a larger font size
+        except IOError:
+            font = ImageFont.load_default()  # Fallback to default font if truetype font is not available
 
         for result in results:
             for box in result.boxes:
