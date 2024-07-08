@@ -1,4 +1,3 @@
-import base64
 import datetime
 import io
 import logging
@@ -7,14 +6,12 @@ from functools import wraps
 import jwt
 from flask import Flask, jsonify, request, send_file
 from flask_caching import Cache
-from flask_cors import CORS
 from flask_executor import Executor
 from PIL import Image, ImageDraw, ImageFont
 from prometheus_flask_exporter import PrometheusMetrics
 from ultralytics import YOLO
 
 app = Flask(__name__)
-CORS(app)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 executor = Executor(app)
 metrics = PrometheusMetrics(app)
@@ -118,13 +115,10 @@ def predict():
             img_with_boxes.save(img_io, 'JPEG')
             img_io.seek(0)
 
-            # Encode the image data in base64
-            img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
-
             app.logger.info('Image processed successfully')
             
             # Return image and metadata
-            return jsonify({'image': img_base64, 'detections': response_metadata})
+            return send_file(img_io, mimetype='image/jpeg'), jsonify(response_metadata)
         except Exception as e:
             app.logger.error(f'Error processing image: {e}')
             return jsonify({'error': 'File processing error'}), 500
