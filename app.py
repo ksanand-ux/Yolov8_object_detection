@@ -98,12 +98,12 @@ def predict():
         draw = ImageDraw.Draw(image)
         try:
             font_path = os.path.join(os.path.dirname(__file__), "DejaVuSans-Bold.ttf")
-            font = ImageFont.truetype(font_path, 50)
+            font = ImageFont.truetype(font_path, 38)
             app.logger.info('Using DejaVuSans-Bold.ttf')
         except IOError:
             try:
                 font_path = os.path.join(os.path.dirname(__file__), "LiberationSans-Bold.ttf")
-                font = ImageFont.truetype(font_path, 50)
+                font = ImageFont.truetype(font_path, 38)
                 app.logger.info('Using LiberationSans-Bold.ttf')
             except IOError:
                 font = ImageFont.load_default()
