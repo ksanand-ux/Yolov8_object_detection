@@ -1,6 +1,7 @@
 import datetime
 import io
 import logging
+import os
 from functools import wraps
 
 import jwt
@@ -96,9 +97,17 @@ def predict():
 
         draw = ImageDraw.Draw(image)
         try:
-            font = ImageFont.truetype("LiberationSans-Bold.ttf", 50)  # Use a larger font size
+            font_path = os.path.join(os.path.dirname(__file__), "DejaVuSans-Bold.ttf")
+            font = ImageFont.truetype(font_path, 50)
+            app.logger.info('Using DejaVuSans-Bold.ttf')
         except IOError:
-            font = ImageFont.load_default()  # Fallback to default font if truetype font is not available
+            try:
+                font_path = os.path.join(os.path.dirname(__file__), "LiberationSans-Regular.ttf")
+                font = ImageFont.truetype(font_path, 50)
+                app.logger.info('Using LiberationSans-Regular.ttf')
+            except IOError:
+                font = ImageFont.load_default()
+                app.logger.info('Using default font')
 
         for result in results:
             for box in result.boxes:
