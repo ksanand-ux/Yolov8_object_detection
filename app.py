@@ -96,7 +96,7 @@ def predict():
 
         draw = ImageDraw.Draw(image)
         try:
-            font = ImageFont.truetype("verdana.ttf", 48)  # Use a larger font size
+            font = ImageFont.truetype("LiberationSans-Bold.ttf", 50)  # Use a larger font size
         except IOError:
             font = ImageFont.load_default()  # Fallback to default font if truetype font is not available
 
