@@ -102,9 +102,9 @@ def predict():
             app.logger.info('Using DejaVuSans-Bold.ttf')
         except IOError:
             try:
-                font_path = os.path.join(os.path.dirname(__file__), "LiberationSans-Regular.ttf")
+                font_path = os.path.join(os.path.dirname(__file__), "LiberationSans-Bold.ttf")
                 font = ImageFont.truetype(font_path, 50)
-                app.logger.info('Using LiberationSans-Regular.ttf')
+                app.logger.info('Using LiberationSans-Bold.ttf')
             except IOError:
                 font = ImageFont.load_default()
                 app.logger.info('Using default font')
