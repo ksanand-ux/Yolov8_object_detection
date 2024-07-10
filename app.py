@@ -5,7 +5,8 @@ import os
 from functools import wraps
 
 import jwt
-from flask import Flask, jsonify, request, send_file
+from flask import (Flask, jsonify, redirect, render_template, request,
+                   send_file, url_for)
 from flask_caching import Cache
 from flask_cors import CORS
 from flask_executor import Executor
@@ -74,8 +75,18 @@ def handle_exception(e):
 
 @app.route('/')
 def index():
-    app.logger.info('Processing default request')
-    return "Welcome to the YOLOv8 Object Detection API!"
+    return render_template('index.html')
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    return redirect(url_for('predict', filename=file.filename))
 
 @app.route('/predict', methods=['POST'])
 @cache.cached(timeout=60, query_string=True)

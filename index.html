@@ -1,13 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLOv8 Object Detection</title>
+</head>
 <body>
-  <h2>YOLOv8 Object Detection Demo</h2>
-
-  <input type="file" id="imageInput" accept="image/*">
-  <button onclick="sendImage()">Predict</button> <br><br>
-  
-  <img id="resultImage" alt="Prediction Result" style="max-width: 100%; height: auto;">
-
-  <script src="script.js"></script>
+    <h1>YOLOv8 Object Detection</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="file">Choose an image:</label>
+        <input type="file" id="file" name="file">
+        <button type="submit">Upload</button>
+    </form>
 </body>
 </html>
