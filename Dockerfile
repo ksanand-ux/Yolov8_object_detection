@@ -8,7 +8,8 @@ ENV PYTHONUNBUFFERED True
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
-    nginx
+    nginx \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /app
@@ -34,4 +35,4 @@ COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 8082
 
 # Run the web service on container startup.
-CMD ["sh", "-c", "nginx && gunicorn -b 127.0.0.1:8080 app:app"]
+CMD ["sh", "-c", "nginx && gunicorn -b 0.0.0.0:8080 app:app"]
