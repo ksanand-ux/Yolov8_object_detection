@@ -27,5 +27,11 @@ RUN pip install --no-cache-dir \
     pyjwt \
     gunicorn
 
+# Copy Nginx configuration file
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose the port on which the app runs
+EXPOSE 8080
+
 # Run the web service on container startup.
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
+CMD ["sh", "-c", "nginx && gunicorn -b 0.0.0.0:8080 app:app"]
