@@ -8,9 +8,7 @@ ENV PYTHONUNBUFFERED True
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
-    nginx \
-    certbot \
-    && rm -rf /var/lib/apt/lists/*
+    nginx
 
 # Set the working directory
 WORKDIR /app
@@ -29,14 +27,5 @@ RUN pip install --no-cache-dir \
     pyjwt \
     gunicorn
 
-# Copy Nginx configuration file
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy the minimal SSL configuration file
-COPY options-ssl-nginx.conf /etc/letsencrypt/options-ssl-nginx.conf
-
-# Expose the port on which the app runs
-EXPOSE 8080
-
 # Run the web service on container startup.
-CMD ["sh", "-c", "nginx && gunicorn -b 0.0.0.0:8080 app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
