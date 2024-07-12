@@ -30,6 +30,14 @@ RUN pip install --no-cache-dir \
 # Copy Nginx configuration file
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Copy the minimal SSL configuration file
+COPY options-ssl-nginx.conf /etc/letsencrypt/options-ssl-nginx.conf
+
+# Copy self-signed SSL certificates
+RUN mkdir -p /etc/letsencrypt/live/e-see.xyz
+COPY certs/fullchain.pem /etc/letsencrypt/live/e-see.xyz/fullchain.pem
+COPY certs/privkey.pem /etc/letsencrypt/live/e-see.xyz/privkey.pem
+
 # Expose the port on which the app runs
 EXPOSE 8080
 
