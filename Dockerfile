@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
     nginx \
+    certbot \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
@@ -32,7 +33,7 @@ RUN pip install --no-cache-dir \
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Expose the port on which the app runs
-EXPOSE 8082
+EXPOSE 8080
 
 # Run the web service on container startup.
 CMD ["sh", "-c", "nginx && gunicorn -b 0.0.0.0:8080 app:app"]
