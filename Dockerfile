@@ -32,6 +32,9 @@ RUN pip install --no-cache-dir \
 # Copy Nginx configuration file
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Copy the minimal SSL configuration file
+COPY options-ssl-nginx.conf /etc/letsencrypt/options-ssl-nginx.conf
+
 # Expose the port on which the app runs
 EXPOSE 8080
 
