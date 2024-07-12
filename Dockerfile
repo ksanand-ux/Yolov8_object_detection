@@ -40,6 +40,9 @@ RUN mkdir -p /etc/letsencrypt/live/e-see.xyz
 COPY certs/fullchain.pem /etc/letsencrypt/live/e-see.xyz/fullchain.pem
 COPY certs/privkey.pem /etc/letsencrypt/live/e-see.xyz/privkey.pem
 
+# Copy the Diffie-Hellman parameter file
+COPY certs/ssl-dhparams.pem /etc/letsencrypt/ssl-dhparams.pem
+
 # Expose the port on which the app runs
 EXPOSE 8080
 
