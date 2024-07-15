@@ -19,7 +19,7 @@ WORKDIR /app
 COPY . .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir -r requirements.txt\
     flask \
     flask_caching \
     flask_executor \
