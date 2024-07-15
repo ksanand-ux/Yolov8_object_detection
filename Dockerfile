@@ -20,17 +20,8 @@ COPY . .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt\
-    flask \
-    flask_caching \
-    flask_executor \
-    flask_cors \
-    ultralytics \
-    prometheus-flask-exporter \
-    pyjwt \
-    gunicorn
-
-# Copy Nginx configuration file
-COPY nginx.conf /etc/nginx/nginx.conf
+    # Copy Nginx configuration file
+    COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy the minimal SSL configuration file
 COPY options-ssl-nginx.conf /etc/letsencrypt/options-ssl-nginx.conf

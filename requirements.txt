@@ -9,5 +9,4 @@ opencv-python-headless
 prometheus-flask-exporter
 pyjwt
 gunicorn
-PIL
 ultralytics
