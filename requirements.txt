@@ -1,6 +1,7 @@
 Flask
 flask-caching
 flask-executor
+flask_cors
 ultralytics
 torch
 pillow
@@ -8,3 +9,5 @@ opencv-python-headless
 prometheus-flask-exporter
 pyjwt
 gunicorn
+PIL
+ultralytics
