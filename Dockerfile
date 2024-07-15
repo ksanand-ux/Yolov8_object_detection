@@ -1,6 +1,10 @@
 # Use the official lightweight Python image.
 FROM python:3.8-slim
 
+# Create nginx user and group
+RUN groupadd -g 101 nginx \
+    && useradd -u 101 -g nginx -s /bin/bash -m nginx
+
 # Allow statements and log messages to immediately appear in the Cloud Run logs
 ENV PYTHONUNBUFFERED True
 
