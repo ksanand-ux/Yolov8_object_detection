@@ -19,9 +19,10 @@ WORKDIR /app
 COPY . .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt\
-    # Copy Nginx configuration file
-    COPY nginx.conf /etc/nginx/nginx.conf
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy Nginx configuration file
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy the minimal SSL configuration file
 COPY options-ssl-nginx.conf /etc/letsencrypt/options-ssl-nginx.conf
