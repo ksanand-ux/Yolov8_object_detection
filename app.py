@@ -54,8 +54,19 @@ def predict():
         results = model(image)
         app.logger.info(f'Inference results: {results}')
 
-        # Return the results (example)
-        return jsonify({'result': 'success', 'results': str(results)})
+        # Format results for JSON response
+        response_data = []
+        for result in results:
+            boxes = result.boxes
+            for box in boxes:
+                response_data.append({
+                    'label': result.names[int(box.cls[0])],
+                    'confidence': float(box.conf[0]),
+                    'coordinates': box.xyxy[0].tolist()
+                })
+
+        # Return the formatted results
+        return jsonify({'result': 'success', 'detections': response_data})
 
     except Exception as e:
         app.logger.error(f'Unexpected error: {e}', exc_info=True)
