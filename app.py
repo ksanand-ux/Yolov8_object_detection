@@ -1,10 +1,12 @@
+import io
 import logging
 import os
 
-from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask import (Flask, jsonify, redirect, render_template, request,
+                   send_file, url_for)
 from flask_caching import Cache
-from PIL import Image
-from ultralytics import YOLO  # Add the necessary import for YOLO
+from PIL import Image, ImageDraw, ImageFont
+from ultralytics import YOLO
 
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -15,7 +17,7 @@ logging.basicConfig(filename='app.log', level=logging.DEBUG,
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 # Load the YOLO model
-model = YOLO('yolov8n.pt')  # Adjust the path to your model file as needed
+model = YOLO('yolov8n.pt')
 
 @app.route('/')
 def index():
@@ -52,21 +54,36 @@ def predict():
 
         # Perform model inference
         results = model(image)
-        app.logger.info(f'Inference results: {results}')
 
-        # Format results for JSON response
-        response_data = []
+        draw = ImageDraw.Draw(image)
+        try:
+            font_path = os.path.join(os.path.dirname(__file__), "DejaVuSans-Bold.ttf")
+            font = ImageFont.truetype(font_path, 20)
+            app.logger.info('Using DejaVuSans-Bold.ttf')
+        except IOError:
+            try:
+                font_path = os.path.join(os.path.dirname(__file__), "LiberationSans-Bold.ttf")
+                font = ImageFont.truetype(font_path, 20)
+                app.logger.info('Using LiberationSans-Bold.ttf')
+            except IOError:
+                font = ImageFont.load_default()
+                app.logger.info('Using default font')
+
         for result in results:
-            boxes = result.boxes
-            for box in boxes:
-                response_data.append({
-                    'label': result.names[int(box.cls[0])],
-                    'confidence': float(box.conf[0]),
-                    'coordinates': box.xyxy[0].tolist()
-                })
+            for box in result.boxes:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                label = f"{result.names[int(box.cls[0])]} {box.conf[0]:.2f}"
+                draw.rectangle([x1, y1, x2, y2], outline="red", width=3)  # Thicker outline
+                text_bbox = draw.textbbox((x1, y1), label, font=font)
+                draw.rectangle(text_bbox, fill="red")  # Background for text
+                draw.text((x1, y1), label, fill="white", font=font)
 
-        # Return the formatted results
-        return jsonify({'result': 'success', 'detections': response_data})
+        img_io = io.BytesIO()
+        image.save(img_io, 'JPEG')
+        img_io.seek(0)
+        app.logger.info('Image processed successfully')
+
+        return send_file(img_io, mimetype='image/jpeg')
 
     except Exception as e:
         app.logger.error(f'Unexpected error: {e}', exc_info=True)
