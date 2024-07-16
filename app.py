@@ -4,6 +4,7 @@ import os
 from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_caching import Cache
 from PIL import Image
+from ultralytics import YOLO  # Add the necessary import for YOLO
 
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -12,6 +13,9 @@ cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 logging.basicConfig(filename='app.log', level=logging.DEBUG,
                     format='%(asctime)s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
+
+# Load the YOLO model
+model = YOLO('yolov8n.pt')  # Adjust the path to your model file as needed
 
 @app.route('/')
 def index():
@@ -46,12 +50,12 @@ def predict():
         image = Image.open(file_path).convert("RGB")
         app.logger.info(f'Processing image: {filename}')
 
-        # Perform your model inference here
-        # For example, replace the following line with your YOLO model inference
+        # Perform model inference
         results = model(image)
+        app.logger.info(f'Inference results: {results}')
 
         # Return the results (example)
-        return jsonify({'result': 'success'})
+        return jsonify({'result': 'success', 'results': str(results)})
 
     except Exception as e:
         app.logger.error(f'Unexpected error: {e}', exc_info=True)
